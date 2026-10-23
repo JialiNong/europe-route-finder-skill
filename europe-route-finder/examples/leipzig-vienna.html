@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>莱比锡到维也纳路线</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@700;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one reading column, departure-board time rows, piste-colour difficulty tags */
+:root{
+  --bg:#f2f5f7; --surface:#ffffff; --ink:#15212b; --muted:#5a6a77; --line:#d6dee4;
+  --glacier:#1f5f8f; --glacier-soft:#e3eef6;
+  --piste-green:#2e7d4f; --piste-blue:#1f5f8f; --piste-red:#c0392b;
+  --bad:#b03a2e;
+  --f-display:"Noto Serif SC","Songti SC",serif;
+  --f-body:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --f-data:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f161c; --surface:#16212a; --ink:#e6edf2; --muted:#93a4b2; --line:#2a3946;
+  --glacier:#7cb6e3; --glacier-soft:#1b2d3c;
+  --piste-green:#5cc58a; --piste-blue:#7cb6e3; --piste-red:#ef7a6c;
+  --bad:#ef7a6c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f161c; --surface:#16212a; --ink:#e6edf2; --muted:#93a4b2; --line:#2a3946;
+  --glacier:#7cb6e3; --glacier-soft:#1b2d3c;
+  --piste-green:#5cc58a; --piste-blue:#7cb6e3; --piste-red:#ef7a6c;
+  --bad:#ef7a6c; color-scheme:dark}
+
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7}
+.wrap{max-width:760px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.3}
+h1{font-size:clamp(26px,6vw,36px);font-weight:900}
+h2{font-size:21px}
+h3{font-size:18px}
+p{margin:0}
+a{color:var(--glacier)}
+.eyebrow{font-size:12px;letter-spacing:.12em;color:var(--muted);font-weight:500}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+
+header{display:flex;flex-direction:column;gap:10px}
+.route-line{font-size:14px;color:var(--muted)}
+.route-line b{color:var(--ink)}
+
+.verdict{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.verdict ul{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:8px}
+.alert{background:var(--glacier-soft);color:var(--ink);border-radius:8px;padding:12px 14px;font-size:14px}
+
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:500;color:var(--muted);font-size:12px;letter-spacing:.06em}
+td.num{font-family:var(--f-data);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.best{color:var(--piste-green);font-weight:600}
+
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;white-space:nowrap}
+.tag i{width:10px;height:10px;display:inline-block;transform:rotate(45deg)}
+.tag.green i{background:var(--piste-green);border-radius:50%;transform:none}
+.tag.blue i{background:var(--piste-blue)}
+
+section.route{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.route-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;align-items:baseline}
+.route-head .total{font-family:var(--f-data);font-size:20px;font-weight:600;white-space:nowrap}
+.pick{font-size:12px;background:var(--glacier-soft);color:var(--glacier);border-radius:999px;padding:2px 10px;font-weight:500;align-self:flex-start}
+
+.legs{display:flex;flex-direction:column;border-left:2px solid var(--line);margin-left:6px}
+.leg{position:relative;padding:0 0 14px 18px;display:flex;flex-direction:column;gap:2px}
+.leg::before{content:"";position:absolute;left:-6px;top:7px;width:10px;height:10px;border-radius:50%;background:var(--surface);border:2px solid var(--glacier)}
+.leg.stay::before{border-color:var(--muted);background:var(--muted)}
+.leg:last-child{padding-bottom:0}
+.leg .t{font-family:var(--f-data);font-weight:600;font-variant-numeric:tabular-nums}
+.leg .what{font-size:13px;color:var(--muted)}
+
+.buy{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;font-size:14px;align-items:baseline}
+.buy .p{font-family:var(--f-data);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.buy .where{font-size:13px;color:var(--muted)}
+.buy .total-row{border-top:1px solid var(--line);padding-top:6px;font-weight:700}
+
+.notes{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.notes li.risk::marker{color:var(--bad)}
+.block-title{font-size:12px;letter-spacing:.08em;color:var(--muted);font-weight:500;margin-bottom:6px}
+
+.excluded{display:flex;flex-direction:column;gap:12px}
+.ex{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:4px}
+
+footer{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:16px}
+footer ul{margin:0;padding-left:1.2em}
+.tag.red i{background:var(--piste-red)}
+.render-error{background:var(--surface);border:1px solid var(--bad);color:var(--bad);border-radius:10px;padding:16px;font-family:var(--f-data);font-size:13px;white-space:pre-wrap}
+
+</style>
+</head>
+<body>
+<div id="app" class="wrap"></div>
+<script type="application/json" id="trip-data">
+{
+  "title": "莱比锡到维也纳路线",
+  "version": 1,
+  "origin": "莱比锡",
+  "destination": "维也纳",
+  "dateLabel": "11 月 26–28 日",
+  "queriedAt": "2026 年 10 月 23 日傍晚（柏林时间）",
+  "intro": "日期灵活（周四 26 日 / 周五 27 日 / 周六 28 日），目的地维也纳市区。一天就能到，不需要中途过夜。关键是：<b>用 Deutschlandticket 免费坐 RE50 到德累斯顿<\/b>，再买德累斯顿 → 维也纳的票；而且这条线上 <b>ÖBB 的特价票常常比 DB 便宜<\/b>。",
+  "verdict": {
+    "items": [
+      "<b>最便宜：A · RE50 到德累斯顿 + FlixBus 白天直达，约 20–23€。<\/b>周四 26 日最便宜（20.49€），下午 15:45 到维也纳。",
+      "<b>坐火车最便宜：B · RE50 到德累斯顿 + ÖBB 特价票，约 27–29€。<\/b>比大巴贵 6€ 左右，但 15:49 直接到维也纳中央火车站，车上舒服得多。",
+      "<b>夜车：E · 德累斯顿 22:10 → 维也纳 07:00，6 人卧铺 70€ 起。<\/b>贵很多，但第二天一早就到，整个白天都能用。"
+    ],
+    "alert": "三个日期里 <b>26 日（周四）普遍最便宜<\/b>，27 日周五最贵。DB 官网的联程票（D，38–45€）反而不是最便宜的：同一条线 ÖBB 卖得更便宜，Omio 上能看到 ÖBB 的票价。"
+  },
+  "dates": [
+    "周四 11/26",
+    "周五 11/27",
+    "周六 11/28"
+  ],
+  "dateTableNote": "「≈」是 Omio 日历上当天的最低价，没有逐班核对是哪一班。* 28 日的夜车价格是一个月前的数据，可能已经涨了。D-Ticket 覆盖的 RE50 不计钱。夜车这一行按出发日期排。",
+  "overviewTitle": "总览（以 27 日周五为例）",
+  "overviewNote": "换乘次数算上了莱比锡 → 德累斯顿的 RE50。每条都在 3 次以内。",
+  "routes": [
+    {
+      "name": "RE50 到德累斯顿 + FlixBus 直达维也纳",
+      "short": "RE50 + FlixBus",
+      "tag": "最便宜",
+      "total": "20.49–23.49€",
+      "price": "23.49€",
+      "effort": "blue",
+      "transfers": "1 次",
+      "times": "07:00 → 15:45",
+      "backup": "大巴 09:50、11:50…",
+      "datePrices": [
+        "20.49€",
+        "23.49€",
+        "23.49€"
+      ],
+      "legs": [
+        {
+          "t": "07:00 Leipzig Hbf → 08:34 Dresden Hbf",
+          "what": "RE50，每小时整点一班，D-Ticket 免费"
+        },
+        {
+          "t": "09:20 Dresden Hbf → 15:45 Wien Erdberg",
+          "what": "FlixBus 直达，约 6.5 小时；Erdberg 是维也纳长途汽车站，旁边就是地铁 U3"
+        }
+      ],
+      "buy": [
+        {
+          "item": "莱比锡 → 德累斯顿 RE50",
+          "price": "0€（D-Ticket）"
+        },
+        {
+          "item": "德累斯顿 → 维也纳",
+          "where": "<a href=\"https://www.flixbus.de/\" target=\"_blank\" rel=\"noopener\">flixbus.de<\/a>；26 日 20.49€，27 日 23.49€，28 日 23.49€",
+          "price": "20.49–23.49€"
+        }
+      ],
+      "notes": [
+        "白天直达班次很多：09:20、09:50、11:50、12:20、13:50、15:50。下午 15:50 那班最便宜（26 日 19.49€，27 日 21.99€），但 22:05 才到。",
+        "RE50 和大巴是分开的票，RE50 晚点没有保护。坐 07:00 那班有 46 分钟余量；就算误了，后面 09:50、11:50 还有车，改签要另付差价。",
+        "夜里出发的大巴（00:30、02:20、03:00 等）按你的要求不考虑。"
+      ]
+    },
+    {
+      "name": "RE50 到德累斯顿 + ÖBB 特价票",
+      "short": "RE50 + ÖBB 火车",
+      "tag": "火车里最便宜",
+      "total": "27–29€",
+      "price": "29€",
+      "effort": "blue",
+      "transfers": "3 次",
+      "times": "07:00 → 15:49",
+      "backup": "分开买票，没保护",
+      "datePrices": [
+        "≈27€",
+        "29€",
+        "≈27€"
+      ],
+      "totalLabel": "合计（27 日）",
+      "legs": [
+        {
+          "t": "07:00 Leipzig Hbf → 08:34 Dresden Hbf",
+          "what": "RE50，D-Ticket 免费"
+        },
+        {
+          "t": "09:10 Dresden Hbf → 15:49 Wien Hbf",
+          "what": "RJ 171 → EC 279 → EC 205，在布拉格等站换车 2 次"
+        }
+      ],
+      "buy": [
+        {
+          "item": "莱比锡 → 德累斯顿 RE50",
+          "price": "0€（D-Ticket）"
+        },
+        {
+          "item": "德累斯顿 → 维也纳（ÖBB 票价）",
+          "where": "<a href=\"https://www.omio.com/trains/dresden/vienna\" target=\"_blank\" rel=\"noopener\">Omio<\/a> 上 ÖBB 卖 29€；也可以去 <a href=\"https://www.oebbtickets.at/\" target=\"_blank\" rel=\"noopener\">oebbtickets.at<\/a> 直接买（这次没有在 ÖBB 官网核实）。同一班车 bahn.de 加 BahnCard 25 是 49.99€",
+          "price": "29.00€"
+        }
+      ],
+      "notes": [
+        "想少换乘：同样 09:10 出发，RJ 171 → RJ 253 只换 1 次，16:49 到，ÖBB 35€。还有 08:09 的 RJX 251 直达（14:54 到，不用换车），但 DB 卖 49.99€、ÖBB 卖 75€，贵很多。",
+        "RE50 和 ÖBB 票是分开的，RE50 晚点没有保护。建议坐 07:00 的 RE50（36 分钟余量），稳妥一点坐 06:00 的。"
+      ]
+    },
+    {
+      "name": "ÖBB 联程票，从莱比锡出发",
+      "short": "ÖBB 联程票",
+      "tag": "联程票里最便宜",
+      "total": "33€",
+      "effort": "green",
+      "transfers": "2 次",
+      "times": "09:39 → 18:54",
+      "backup": "联程票有保护",
+      "datePrices": [
+        "≈30€",
+        "33€",
+        "≈43€"
+      ],
+      "totalLabel": "合计（27 日）",
+      "legs": [
+        {
+          "t": "09:39 Leipzig Hbf → 18:54 Wien Hbf",
+          "what": "IC 2447 → RJ 173 → RJ 255，换乘 2 次"
+        }
+      ],
+      "buy": [
+        {
+          "item": "莱比锡 → 维也纳（ÖBB 票价）",
+          "where": "<a href=\"https://www.omio.com/trains/leipzig/vienna\" target=\"_blank\" rel=\"noopener\">Omio<\/a> 上 ÖBB 卖 33€；同一班车 bahn.de 加 BC25 是 69.99€",
+          "price": "33.00€"
+        }
+      ],
+      "notes": [
+        "只比 B 贵 4€，但是一张联程票：中间哪一段晚点，后面的车都有保护。缺点是出发晚，晚上 19 点才到。"
+      ]
+    },
+    {
+      "name": "DB 联程票，05:49 直达布拉格再转车",
+      "short": "DB 联程票经布拉格",
+      "tag": "最早到",
+      "total": "37.99–44.99€",
+      "price": "44.99€",
+      "effort": "green",
+      "transfers": "2 次",
+      "times": "05:49 → 13:49",
+      "backup": "联程票有保护",
+      "datePrices": [
+        "37.99€",
+        "44.99€",
+        "39.99€"
+      ],
+      "legs": [
+        {
+          "t": "05:49 Leipzig Hbf → 09:25 Praha hl.n.",
+          "what": "EC 459 直达布拉格"
+        },
+        {
+          "t": "09:37 Praha → 12:47 Břeclav",
+          "what": "RJ 277；在布拉格换乘 12 分钟"
+        },
+        {
+          "t": "12:55 Břeclav → 13:49 Wien Hbf",
+          "what": "EC 103；换乘 8 分钟"
+        }
+      ],
+      "buy": [
+        {
+          "item": "莱比锡 → 维也纳",
+          "where": "<a href=\"https://www.bahn.de/\" target=\"_blank\" rel=\"noopener\">bahn.de<\/a> + BahnCard 25，Sparpreis Europa；26 日 37.99€，27 日 44.99€，28 日 39.99€。Omio 上这一班 35€（不认 BahnCard）",
+          "price": "37.99–44.99€"
+        }
+      ],
+      "notes": [
+        "下午 13:49 就到，是白天方案里最早的，但要 5 点多出门。",
+        "两次换乘都比较短（12 分钟、8 分钟）。这是联程票，误车可以改坐后面的车。"
+      ]
+    },
+    {
+      "name": "Nightjet NJ 457，德累斯顿 → 维也纳",
+      "short": "夜车 NJ 457",
+      "tag": "夜车 · 第二天一早到",
+      "total": "70–86€",
+      "price": "86€",
+      "effort": "green",
+      "transfers": "1 次",
+      "times": "20:00 → 次日 07:00",
+      "backup": "每晚只有一班",
+      "datePrices": [
+        "70€",
+        "86€",
+        "≈50€ *"
+      ],
+      "legs": [
+        {
+          "t": "20:00 Leipzig Hbf → 21:34 Dresden Hbf",
+          "what": "RE50，D-Ticket 免费；19:00 那班更稳妥"
+        },
+        {
+          "t": "22:10 Dresden Hbf → 次日 07:00 Wien Hbf",
+          "what": "NJ 457（柏林开来），6 人卧铺 couchette；22:02 也可以在 Dresden-Neustadt 上车",
+          "stay": true
+        }
+      ],
+      "buy": [
+        {
+          "item": "莱比锡 → 德累斯顿 RE50",
+          "price": "0€（D-Ticket）"
+        },
+        {
+          "item": "夜车 6 人卧铺",
+          "where": "<a href=\"https://www.nightjet.com/\" target=\"_blank\" rel=\"noopener\">nightjet.com<\/a> / <a href=\"https://www.oebbtickets.at/\" target=\"_blank\" rel=\"noopener\">oebbtickets.at<\/a> 或 bahn.de。26 日出发 70–71€，27 日出发 86€（ÖBB，4 天前的数据），4 人卧铺 80–100€。只坐座位 35–36€",
+          "price": "70–86€"
+        }
+      ],
+      "notes": [
+        "<b>好处：<\/b>睡一觉就到，早上 7 点到维也纳，整个白天都能用；如果你本来就要在维也纳住，还能省一晚住宿。",
+        "<b>代价：<\/b>比 A 贵 50–60€；6 人卧铺睡得不如床；每晚只有这一班，没有后备。",
+        "Nightjet 的卧铺车厢可以订女生专用包厢（Damenabteil），订票时选上。",
+        "价格来自 Night Ride 汇总的 ÖBB 和 DB 报价，是几天前的快照，夜车越临近越贵。"
+      ]
+    }
+  ],
+  "excluded": [
+    {
+      "name": "FlixBus 从莱比锡直达",
+      "why": "白天只有 11:00 → 19:15 一班直达，27 日 50.99€；比先坐 RE50 到德累斯顿再坐大巴贵一倍多，到得还晚。"
+    },
+    {
+      "name": "德累斯顿 → 布拉格 → 维也纳，全坐 RegioJet",
+      "why": "大巴 14.90€ + 火车 16.90€，约 32€，比 A 贵、比 B 慢，没有优势。"
+    },
+    {
+      "name": "在布拉格住一晚",
+      "why": "当天就能到维也纳，中途过夜只会多花住宿钱。"
+    },
+    {
+      "name": "飞机",
+      "why": "没有查。火车和大巴最低 20–45€，坐飞机还要去机场、加托运行李，不会更划算。"
+    },
+    {
+      "name": "过夜大巴",
+      "why": "按你的要求不考虑。"
+    }
+  ],
+  "footer": {
+    "paragraphs": [
+      "假设：1 位成人，二等座，BahnCard 25，Deutschlandticket，普通行李。夜车按 6 人卧铺报价。",
+      "比价来源：bahn.de、Omio（含 ÖBB 票价）、FlixBus、RegioJet、Night Ride（夜车）。Google 地图对 27 日推荐的是 07:25 IC → RJ 171 → EC → EC，15:49 到（就是 DB 3 次换乘的那班），它没有找到 05:49 直达布拉格的 EC，也没有找到「RE50 + 德累斯顿出发的大巴」。ÖBB 官网这次没有直接核实，Omio 上的 ÖBB 价格可能含少量手续费。Interrail 只卖通票，不卖单程票，所以没用来比价。"
+    ],
+    "links": [
+      [
+        {
+          "text": "bahn.de",
+          "url": "https://www.bahn.de/"
+        },
+        {
+          "text": "Omio",
+          "url": "https://www.omio.com/"
+        },
+        {
+          "text": "ÖBB",
+          "url": "https://www.oebbtickets.at/"
+        },
+        {
+          "text": "FlixBus",
+          "url": "https://www.flixbus.de/"
+        },
+        {
+          "text": "RegioJet",
+          "url": "https://regiojet.com/"
+        }
+      ],
+      [
+        {
+          "text": "Night Ride：德累斯顿 → 维也纳夜车",
+          "url": "https://nightride.com/de/connections/2026-11-26/von-dresden-nach-wien+9c7b5f9c-076c-4163-b7dc-732988e1f0e2+9c7b5f9d-c351-4a8d-abc9-ed355ca27057"
+        },
+        {
+          "text": "Nightjet",
+          "url": "https://www.nightjet.com/"
+        }
+      ]
+    ]
+  }
+}
+</script>
+<script>
+/* europe-route-finder 路线对比页渲染器 v1
+ * 读取页面里 <script type="application/json" id="trip-data"> 的 JSON，渲染成对比页。
+ * 方案编号按 routes 数组顺序自动生成 A、B、C…；两张表都从 routes 自动生成。
+ * 标了「html」的字段允许 <b> <a> <br> 等行内标签，其余字段按纯文本处理。
+ */
+(function () {
+  "use strict";
+  var app = document.getElementById("app") || document.body.appendChild(document.createElement("div"));
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+  function html(s) { return s == null ? "" : String(s); }
+  function letter(i) { return String.fromCharCode(65 + i); }
+  // 取价格字符串里的第一个数字，用来找最低价（「≈27€」→27，「20.49–23.49€」→20.49）
+  function num(s) {
+    var m = String(s == null ? "" : s).replace(/,/g, ".").match(/\d+(\.\d+)?/);
+    return m ? parseFloat(m[0]) : NaN;
+  }
+  function tag(effort) {
+    var map = { green: "省事", blue: "中等", red: "折腾" };
+    var k = map[effort] ? effort : "blue";
+    return '<span class="tag ' + k + '"><i></i>' + map[k] + "</span>";
+  }
+  function link(l) {
+    return '<a href="' + esc(l.url) + '" target="_blank" rel="noopener">' + esc(l.text) + "</a>";
+  }
+
+  function render(d) {
+    var routes = d.routes || [];
+    var out = [];
+
+    // 页头
+    var eyebrow = d.eyebrow || [d.origin + " → " + d.destination, d.dateLabel, "第 " + (d.version || 1) + " 版"].filter(Boolean).join(" · ");
+    out.push('<header><div class="eyebrow">' + esc(eyebrow) + "</div>");
+    out.push("<h1>" + esc(d.heading || (d.origin + " → " + d.destination)) + "</h1>");
+    if (d.intro) out.push('<p class="route-line">' + html(d.intro) + "</p>");
+    out.push("</header>");
+
+    // 结论
+    if (d.verdict) {
+      out.push('<div class="verdict"><h2>结论</h2>');
+      if (d.verdict.items && d.verdict.items.length) {
+        out.push("<ul>" + d.verdict.items.map(function (x) { return "<li>" + html(x) + "</li>"; }).join("") + "</ul>");
+      }
+      (d.verdict.alerts || (d.verdict.alert ? [d.verdict.alert] : [])).forEach(function (a) {
+        out.push('<p class="alert">' + html(a) + "</p>");
+      });
+      out.push("</div>");
+    }
+
+    // 放宽条件能省多少
+    if (d.relax && d.relax.length) {
+      out.push('<section><h2 style="margin-bottom:10px">放宽条件能省多少</h2><ul class="notes">' +
+        d.relax.map(function (x) { return "<li>" + html(x) + "</li>"; }).join("") + "</ul></section>");
+    }
+
+    // 日期 × 方案价格表（从 routes[].datePrices 生成，每列最低价自动标绿）
+    var dates = d.dates || [];
+    var priced = routes.filter(function (r) { return r.datePrices && r.datePrices.length; });
+    if (dates.length > 1 && priced.length) {
+      var colMin = dates.map(function (_, j) {
+        var vals = priced.map(function (r) { return num(r.datePrices[j]); }).filter(function (v) { return !isNaN(v) && v > 0; });
+        return vals.length ? Math.min.apply(null, vals) : NaN;
+      });
+      out.push('<section><h2 style="margin-bottom:10px">' + esc(d.dateTableTitle || "日期 × 方案价格") + '</h2><div class="scroll"><table><thead><tr><th>方案</th>');
+      dates.forEach(function (x) { out.push("<th>" + esc(x) + "</th>"); });
+      out.push("</tr></thead><tbody>");
+      routes.forEach(function (r, i) {
+        if (!r.datePrices || !r.datePrices.length) return;
+        out.push("<tr><td>" + letter(i) + " " + esc(r.short || r.name) + "</td>");
+        dates.forEach(function (_, j) {
+          var p = r.datePrices[j];
+          var best = num(p) === colMin[j];
+          out.push('<td class="num' + (best ? " best" : "") + '">' + esc(p == null || p === "" ? "—" : p) + "</td>");
+        });
+        out.push("</tr>");
+      });
+      out.push("</tbody></table></div>");
+      if (d.dateTableNote) out.push('<p class="small muted" style="margin-top:8px">' + html(d.dateTableNote) + "</p>");
+      out.push("</section>");
+    }
+
+    // 总览表（有任何一条写了 stay 才显示「过夜」列；最低价自动标绿）
+    if (routes.length) {
+      var hasStay = routes.some(function (r) { return r.stay; });
+      var minPrice = Math.min.apply(null, routes.map(function (r) { return num(r.price || r.total); }).filter(function (v) { return !isNaN(v) && v > 0; }));
+      out.push('<section><h2 style="margin-bottom:10px">' + esc(d.overviewTitle || "总览") + '</h2><div class="scroll"><table><thead><tr><th>方案</th><th>折腾程度</th>' +
+        (hasStay ? "<th>过夜</th>" : "") + "<th>换乘</th><th>出发 → 到达</th><th>后备</th><th>价格</th></tr></thead><tbody>");
+      routes.forEach(function (r, i) {
+        var p = r.price || r.total;
+        out.push("<tr><td>" + letter(i) + " " + esc(r.short || r.name) + "</td><td>" + tag(r.effort) + "</td>" +
+          (hasStay ? "<td>" + esc(r.stay || "—") + "</td>" : "") +
+          '<td class="num">' + esc(r.transfers || "—") + '</td><td class="num">' + esc(r.times || "—") + "</td><td>" + esc(r.backup || "—") +
+          '</td><td class="num' + (num(p) === minPrice ? " best" : "") + '">' + esc(p) + "</td></tr>");
+      });
+      out.push("</tbody></table></div>");
+      if (d.overviewNote) out.push('<p class="small muted" style="margin-top:8px">' + html(d.overviewNote) + "</p>");
+      out.push("</section>");
+    }
+
+    // 每条方案的卡片
+    routes.forEach(function (r, i) {
+      out.push('<section class="route" id="' + letter(i).toLowerCase() + '"><div class="route-head"><div style="display:flex;flex-direction:column;gap:4px">' +
+        (r.tag ? '<span class="pick">' + esc(r.tag) + "</span>" : "") + "<h3>" + letter(i) + " · " + esc(r.name) + '</h3></div><div class="total">' + esc(r.total) + "</div></div>");
+      if (r.summary) out.push("<p>" + html(r.summary) + "</p>");
+      if (r.legs && r.legs.length) {
+        out.push('<div class="legs">' + r.legs.map(function (l) {
+          return '<div class="leg' + (l.stay ? " stay" : "") + '"><span class="t">' + esc(l.t) + '</span><span class="what">' + html(l.what) + "</span></div>";
+        }).join("") + "</div>");
+      }
+      if (r.buy && r.buy.length) {
+        out.push('<div><div class="block-title">在哪里买最便宜</div><div class="buy">');
+        r.buy.forEach(function (b) {
+          out.push("<span>" + esc(b.item) + (b.where ? '<br><span class="where">' + html(b.where) + "</span>" : "") + '</span><span class="p">' + esc(b.price) + "</span>");
+        });
+        out.push('<span class="total-row">' + esc(r.totalLabel || "合计") + '</span><span class="p total-row">' + esc(r.total) + "</span></div></div>");
+      }
+      if (r.notes && r.notes.length) {
+        out.push('<ul class="notes">' + r.notes.map(function (n) { return "<li>" + html(n) + "</li>"; }).join("") + "</ul>");
+      }
+      out.push("</section>");
+    });
+
+    // 其他小节（例如「周六共用的后备车」）
+    (d.sections || []).forEach(function (s) {
+      out.push('<section><h2 style="margin-bottom:10px">' + esc(s.title) + "</h2>");
+      (s.groups || [{ items: s.items, caption: s.caption }]).forEach(function (g) {
+        if (g.caption) out.push('<p class="small muted" style="margin:10px 0 6px">' + html(g.caption) + "</p>");
+        if (g.items && g.items.length) out.push('<ul class="notes">' + g.items.map(function (x) { return "<li>" + html(x) + "</li>"; }).join("") + "</ul>");
+      });
+      out.push("</section>");
+    });
+
+    // 排除的方案
+    if (d.excluded && d.excluded.length) {
+      out.push('<section class="excluded"><h2>看过但排除的方案</h2>' + d.excluded.map(function (e) {
+        return '<div class="ex"><b>' + esc(e.name) + "</b><span>" + html(e.why) + "</span></div>";
+      }).join("") + "</section>");
+    }
+
+    // 页脚
+    var f = d.footer || {};
+    out.push("<footer>");
+    out.push("<p>查询时间：" + esc(d.queriedAt || "") + "。价格是查询时的快照，以官网为准。</p>");
+    (f.paragraphs || []).forEach(function (p) { out.push("<p>" + html(p) + "</p>"); });
+    if (f.links && f.links.length) {
+      out.push("<ul>" + f.links.map(function (row) {
+        return "<li>" + (Array.isArray(row) ? row : [row]).map(link).join(" · ") + "</li>";
+      }).join("") + "</ul>");
+    }
+    out.push("</footer>");
+
+    app.className = "wrap";
+    app.innerHTML = out.join("");
+    if (d.title) document.title = d.title;
+  }
+
+  try {
+    var el = document.getElementById("trip-data");
+    if (!el) throw new Error("页面里没有找到 id=\"trip-data\" 的 JSON。");
+    render(JSON.parse(el.textContent));
+  } catch (e) {
+    app.className = "wrap";
+    app.innerHTML = '<div class="render-error">路线页渲染失败：' + esc(e.message) + "</div>";
+  }
+})();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/JialiNong/europe-route-finder-skill/europe-route-finder/schema/trip.schema.json",
+  "title": "路线对比页数据",
+  "description": "europe-route-finder 输出的行程数据。方案编号由 routes 的顺序自动生成 A、B、C…；标注 html 的字段允许 <b> <a> <br> 等行内标签。",
+  "type": "object",
+  "required": ["title", "origin", "destination", "queriedAt", "routes"],
+  "properties": {
+    "title": { "type": "string", "description": "页面标题，两到四个词，例如「莱比锡到维也纳路线」" },
+    "version": { "type": "integer", "minimum": 1, "description": "版本号，每次改版加 1" },
+    "origin": { "type": "string" },
+    "destination": { "type": "string" },
+    "dateLabel": { "type": "string", "description": "例如「11 月 26–28 日」" },
+    "eyebrow": { "type": "string", "description": "可选，覆盖页头小字" },
+    "heading": { "type": "string", "description": "可选，覆盖大标题" },
+    "queriedAt": { "type": "string", "description": "查询时间，例如「2026 年 10 月 23 日傍晚（柏林时间）」" },
+    "intro": { "type": "string", "description": "html：目标、硬性条件、关键思路" },
+    "verdict": {
+      "type": "object",
+      "properties": {
+        "items": { "type": "array", "items": { "type": "string" }, "description": "html：顶部结论，每条一般以「<b>X · 方案名，约 N€。</b>」开头" },
+        "alert": { "type": "string", "description": "html：提示框" },
+        "alerts": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "relax": { "type": "array", "items": { "type": "string" }, "description": "html：放宽条件能省多少" },
+    "dates": { "type": "array", "items": { "type": "string" }, "description": "日期列，例如 [\"周四 11/26\", \"周五 11/27\"]；只有一天时不显示日期表" },
+    "dateTableTitle": { "type": "string" },
+    "dateTableNote": { "type": "string", "description": "html" },
+    "overviewTitle": { "type": "string" },
+    "overviewNote": { "type": "string", "description": "html" },
+    "routes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "按推荐顺序排列",
+      "items": { "$ref": "#/$defs/route" }
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": { "type": "string" },
+          "caption": { "type": "string" },
+          "items": { "type": "array", "items": { "type": "string" } },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "caption": { "type": "string", "description": "html" },
+                "items": { "type": "array", "items": { "type": "string" }, "description": "html" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "excluded": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "why"],
+        "properties": { "name": { "type": "string" }, "why": { "type": "string", "description": "html" } }
+      }
+    },
+    "footer": {
+      "type": "object",
+      "properties": {
+        "paragraphs": { "type": "array", "items": { "type": "string" }, "description": "html：假设、查法、来源、没查的来源" },
+        "links": {
+          "type": "array",
+          "description": "每一行是一组链接",
+          "items": { "type": "array", "items": { "$ref": "#/$defs/link" } }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "link": {
+      "type": "object",
+      "required": ["text", "url"],
+      "properties": { "text": { "type": "string" }, "url": { "type": "string", "format": "uri" } }
+    },
+    "route": {
+      "type": "object",
+      "required": ["name", "total"],
+      "properties": {
+        "name": { "type": "string", "description": "卡片标题" },
+        "short": { "type": "string", "description": "表格里的短名" },
+        "tag": { "type": "string", "description": "小标签，例如「最便宜」「已订」" },
+        "total": { "type": "string", "description": "卡片总价，可以是区间，例如「20.49–23.49€」" },
+        "price": { "type": "string", "description": "总览表里的价格，默认用 total" },
+        "totalLabel": { "type": "string", "description": "合计行文字，默认「合计」" },
+        "effort": { "enum": ["green", "blue", "red"], "description": "green 省事、blue 中等、red 折腾" },
+        "transfers": { "type": "string", "description": "例如「2 次」" },
+        "times": { "type": "string", "description": "例如「07:00 → 15:45」" },
+        "stay": { "type": "string", "description": "过夜城市和房型；任何一条有 stay 才显示「过夜」列" },
+        "backup": { "type": "string" },
+        "datePrices": { "type": "array", "items": { "type": "string" }, "description": "和 dates 一一对应，查不到写 \"—\"" },
+        "summary": { "type": "string", "description": "html，简单方案只写一段话时用" },
+        "legs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["t"],
+            "properties": {
+              "t": { "type": "string", "description": "时间和起止站，例如「07:00 Leipzig Hbf → 08:34 Dresden Hbf」" },
+              "what": { "type": "string", "description": "html：车次、运营方、换乘时间" },
+              "stay": { "type": "boolean", "description": "住宿或卧铺这一段设为 true" }
+            }
+          }
+        },
+        "buy": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["item", "price"],
+            "properties": {
+              "item": { "type": "string" },
+              "where": { "type": "string", "description": "html：购买链接和其他渠道的对比价" },
+              "price": { "type": "string" }
+            }
+          }
+        },
+        "notes": { "type": "array", "items": { "type": "string" }, "description": "html：后备、风险、好处和代价" }
+      }
+    }
+  }
+}

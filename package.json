@@ -1,0 +1,14 @@
+{
+  "name": "europe-route-finder-skill",
+  "version": "1.0.0",
+  "description": "给 AI agent 用的欧洲交通路线查找 skill：扩展两端枢纽、找夜车和隐藏直达、比价，输出 JSON 并渲染成对比页。",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "render": "node europe-route-finder/scripts/render.mjs",
+    "example": "node europe-route-finder/scripts/render.mjs europe-route-finder/examples/leipzig-vienna.json",
+    "package": "cd europe-route-finder && zip -r ../europe-route-finder.zip . -x '*.DS_Store'"
+  },
+  "engines": { "node": ">=18" },
+  "license": "MIT"
+}

@@ -1,0 +1,11 @@
+---
+description: 查欧洲内的交通路线（火车、夜车、大巴、飞机）、比价、找中途过夜的青旅时使用
+globs:
+alwaysApply: false
+---
+
+按仓库根目录的 `AGENTS.md` 工作：
+
+- 先读 `europe-route-finder/SKILL.md`（流程）和 `europe-route-finder/profile.md`（用户的固定情况）。
+- 查完写 `trips/<行程名>.json`，格式见 `europe-route-finder/schema/trip.schema.json`，示例见 `europe-route-finder/examples/leipzig-vienna.json`。
+- 用 `node europe-route-finder/scripts/render.mjs trips/<行程名>.json` 渲染成 HTML，不要手写 HTML。
