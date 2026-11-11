@@ -1,80 +1,93 @@
-# Europe Route Finder · 欧洲交通路线查找 skill
+# Europe Route Finder
 
-**让 AI agent 像一个很会省钱的欧洲老司机那样帮你查路线**：不只搜「A → B」，而是把出发地和目的地都扩展成一圈枢纽城市，找比价网站搜不到的直达车、夜车和大区班车，对比官网和比价平台的真实价格，把中途青旅也算进总价，最后输出一张可以直接打开的对比页。
+**English** · [中文](README.zh-CN.md)
 
-适用于 Claude、Claude Code、Cursor、Codex、ChatGPT、Gemini 等能上网的 AI agent。
+**An AI-agent skill that finds European train, bus and night-train routes like a seasoned budget traveller.** Booking sites only search "A → B". This skill expands both ends into a ring of hub cities. That turns up the direct trains, night trains and regional buses that comparison sites miss. It then compares real fares on operator sites against aggregators, adds the hostel for any overnight stop to the total, and tells you where to buy each leg most cheaply. The result is one bilingual (中文 / English) comparison page you can open or share.
+
+It works with any AI agent that can browse the web: Claude, Claude Code, Cursor, Codex, ChatGPT, Gemini.
 
 <p>
-  <img src="docs/screenshot-desktop.png" alt="对比页示例：莱比锡到维也纳" width="560">
-  <img src="docs/screenshot-mobile-dark.png" alt="手机深色模式" width="200">
+  <img src="docs/screenshot-desktop.png" alt="Comparison page: Leipzig to Vienna" width="560">
+  <img src="docs/screenshot-mobile-dark.png" alt="Same page on a phone in dark mode" width="200">
 </p>
 
-示例：[`europe-route-finder/examples/leipzig-vienna.html`](europe-route-finder/examples/leipzig-vienna.html)（下载后用浏览器打开）
+**Live example:** [Leipzig → Vienna](https://htmlpreview.github.io/?https://github.com/JialiNong/europe-route-finder-skill/blob/main/europe-route-finder/examples/leipzig-vienna.html) (the toggle at the top right switches between 中文 and English) · source data: [`leipzig-vienna.json`](europe-route-finder/examples/leipzig-vienna.json)
 
 ---
 
-## 为什么需要它
+## Why
 
-Google 地图、Omio、Interrail 都只在「出发站 → 目的站」之间算路线，所以经常漏掉更好的方案：
+Google Maps, Omio and Interrail plan between the origin and the destination station only, so they routinely miss better options:
 
-- **莱比锡 → 法国滑雪场 Les Arcs**：直觉是「去日内瓦中转」，但日内瓦住宿贵、瑞士火车贵、日内瓦到雪场的接驳也贵。更好的做法是第一天坐 DB 到伯尔尼（约 41€，住一晚青旅约 33€），第二天坐 FlixBus **越过日内瓦**到安纳西，换大区班车 Y51 到阿尔贝维尔，再坐 TER 到山下，凭火车票免费坐缆车上山。全程约 105–110€，中午就到，每一段都有后备班次。
-- **莱比锡 → 维也纳**：用 Deutschlandticket 免费坐区域车到德累斯顿，再坐 FlixBus 白天直达，约 20€；坐火车的话，同一班车 ÖBB 卖 29€，bahn.de 加 BahnCard 25 却要 49.99€。
-- **莱比锡 → 布达佩斯**：德累斯顿有直达布达佩斯的夜车，很多平台搜不到。
+- **Leipzig → Les Arcs (French Alps ski resort):** the instinct is to change in Geneva, but Geneva beds, Swiss trains and the Geneva–resort shuttle are all expensive. Better: on day 1, DB to Bern (about €41) and a hostel night (about €33). On day 2, a FlixBus that **skips Geneva** to Annecy, regional bus Y51 to Albertville, then a TER train to the valley station, where the train ticket gets you a free lift up. About €105–110 in total, arriving by noon, with backups on every leg.
+- **Leipzig → Vienna:** ride regional trains free to Dresden on the Deutschlandticket, then take a daytime FlixBus direct for about €20. By train, the same Dresden–Vienna service costs €29 from ÖBB but €49.99 on bahn.de, even with BahnCard 25.
+- **Leipzig → Budapest:** a night train runs direct from Dresden, but many platforms don't show it.
 
-这个 skill 把这些经验写成了固定的流程，让 agent 每次都按这个思路查。
+The skill turns these patterns into a repeatable process, so the agent searches this way every time.
 
-## 它会做什么
+## What it does
 
-1. **两端扩展成枢纽集合**：找到目的地的「最后一个火车站」和它所在的铁路线，列出能接上这条线的城市（包括只通大区班车的城市），再往外找住宿便宜的过夜枢纽。
-2. **拼路线**：一天直达、两段式（第一天长途到便宜的过夜城市，第二天短途）、卧铺夜车、飞机基准；每条路线都用 Google 地图公交模式交叉核对。
-3. **查真实价格**：DB、SBB、SNCF、ÖBB、FlixBus、RegioJet、Nightjet 等官网和 Omio 比价，按日期范围查，白天车按二等座、夜车按卧铺。
-4. **查青旅**：Hostelworld 和 Booking 按具体日期、具体房型逐家查。
-5. **算总价、排序**：含住宿和最后一段，考虑换乘次数和后备班次。
-6. **输出对比页**：agent 只写一份 JSON，由固定模板渲染成页面，省 token，页面每次都一样整齐。
+1. **Expands both ends into hub sets.** It finds the destination's last railway station and its line, lists every city that connects to that line (including by regional bus only), then looks further out for cheap overnight hubs.
+2. **Builds candidate routes:** same-day, two-day (a long first day to a cheap overnight city, then a short second day), sleeper night trains, and a flight baseline. Each one is cross-checked in Google Maps transit mode.
+3. **Checks real fares** on DB, SBB, SNCF, ÖBB, FlixBus, RegioJet, Nightjet and others, plus Omio, across a date range. Day trains are priced in second class, night trains in berths.
+4. **Checks hostels** on Hostelworld and Booking for the exact date and room type.
+5. **Totals and ranks** routes including accommodation and the last mile, weighing changes and backup departures.
+6. **Writes JSON** and renders it with a fixed template into a self-contained, bilingual HTML page.
 
-## 项目结构
+## Design decisions
+
+| Decision | Why |
+|---|---|
+| **The agent writes data, a fixed template renders the page** | The model only outputs JSON (validated against [`schema/trip.schema.json`](europe-route-finder/schema/trip.schema.json)). Route letters, the date × price table, the overview table and the cheapest-in-column highlight are all computed by [`template/render.js`](europe-route-finder/template/render.js). That means fewer tokens, the same layout every time, and fixes made in one place. |
+| **Bilingual data model** | Any text field can be `"…"` or `{"zh": "…", "en": "…"}`. The toggle appears only when both languages exist, the choice persists, and `?lang=en` deep-links. |
+| **Allowlisted HTML in text fields** | Only `<b> <i> <a> <br>`-style inline tags survive, links must be `http(s)`, and all attributes are stripped, so scraped text can't inject script into a page you share. |
+| **Preferences in `profile.md`** | Home city, rail passes, discount cards, "no overnight buses", hostel room preference and change limits are kept separate from the generic workflow. |
+| **Two zero-dependency renderers** | [`render.mjs`](europe-route-finder/scripts/render.mjs) (Node 18+) and [`render.py`](europe-route-finder/scripts/render.py) (stdlib only) produce identical output and validate the JSON first. |
+| **Safety rules** | The agent never books or pays, never enters personal data, never bypasses captchas, and doesn't hammer sites that block bots. Prices it can't verify are marked as such. |
+
+## Project structure
 
 ```
-europe-route-finder/          ← skill 本体（可以整个文件夹打包上传到 Claude）
-├── SKILL.md                  ← 完整流程：第 0–7 步
-├── profile.md                ← 你的个人设置（出发地、车票、偏好），先改这个
-├── schema/trip.schema.json   ← 行程 JSON 的格式
-├── template/                 ← 固定页面模板
+europe-route-finder/          ← the skill itself (zip this folder to upload to Claude)
+├── SKILL.md                  ← the workflow, steps 0–7 (written in Chinese; agents follow it in any language)
+├── profile.md                ← your home city, tickets and preferences; edit this first
+├── schema/trip.schema.json   ← JSON format, including bilingual text fields
+├── template/
 │   ├── shell.html
-│   ├── style.css             ← 浅色/深色主题、手机适配
-│   └── render.js             ← 在浏览器里把 JSON 渲染成对比页
+│   ├── style.css             ← light/dark themes, phone layout, print styles
+│   └── render.js             ← renders the JSON in the browser (i18n, sanitiser, tables)
 ├── scripts/
-│   ├── render.mjs            ← JSON → 独立 HTML（Node 18+，无依赖）
-│   └── render.py             ← 同上（Python 3，只用标准库）
+│   ├── render.mjs            ← JSON → standalone HTML (Node 18+, no dependencies)
+│   └── render.py             ← same, Python 3 standard library only
 └── examples/
-    ├── leipzig-vienna.json
+    ├── leipzig-vienna.json   ← a real search, bilingual
     └── leipzig-vienna.html
 
-AGENTS.md                     ← Cursor / Codex / Gemini CLI 等会自动读的入口
-CLAUDE.md                     ← Claude Code 的入口（引用 AGENTS.md）
-GEMINI.md                     ← Gemini CLI 的入口
-.cursor/rules/                ← Cursor 规则
-.claude/skills/               ← Claude Code 项目 skill（链接到 europe-route-finder/）
+AGENTS.md                     ← entry point for Cursor / Codex / Gemini CLI
+CLAUDE.md                     ← entry point for Claude Code (imports AGENTS.md)
+GEMINI.md                     ← entry point for Gemini CLI
+.cursor/rules/                ← Cursor rule
+.claude/skills/               ← Claude Code project skill (symlink to europe-route-finder/)
 ```
 
-## 先改个人设置
+## Set up your profile
 
-打开 [`europe-route-finder/profile.md`](europe-route-finder/profile.md)，换成你自己的情况。现在里面是作者的设置：
+Open [`europe-route-finder/profile.md`](europe-route-finder/profile.md) and replace it with your own situation. It currently holds the author's:
 
-- 住在莱比锡，有 Deutschlandticket 和 BahnCard 25
-- 不坐过夜大巴
-- 中途住青旅，女生间优先
-- 每一段（两个大城市之间）换乘不超过 3 次
+- based in Leipzig, with a Deutschlandticket and BahnCard 25
+- never takes overnight buses
+- one-night stops in hostels, women's dorm first
+- at most 3 changes per leg between two big cities
 
-agent 每次查路线前都会先读这个文件。
+The agent reads this file before every search.
 
-## 怎么用
+## Usage
 
-### Claude（claude.ai / 桌面端）
+### Claude (claude.ai / desktop)
 
-1. 下载仓库，把 `europe-route-finder/` 文件夹打成 zip（或运行 `npm run package`）。
-2. 在 Claude 的 **设置 → Skills（技能）** 里上传这个 zip。
-3. 对 Claude 说：「莱比锡到维也纳，11 月 27 日左右，帮我查一下」。Claude 会按流程查完，渲染页面并发布成 Artifact。
+1. Zip the `europe-route-finder/` folder (or run `npm run package`).
+2. Upload the zip under **Settings → Skills**.
+3. Say something like "Leipzig to Vienna around 27 November". Claude does the research and publishes the page as an Artifact.
 
 ### Claude Code
 
@@ -84,43 +97,37 @@ cd europe-route-finder-skill
 claude
 ```
 
-仓库里的 `.claude/skills/europe-route-finder` 会被识别为项目 skill，直接说「莱比锡到维也纳 11.27」或输入 `/europe-route-finder`。想在所有项目里都能用，把 `europe-route-finder/` 复制到 `~/.claude/skills/`。
+`.claude/skills/europe-route-finder` is picked up as a project skill. You can also type `/europe-route-finder`. To use it everywhere, copy `europe-route-finder/` to `~/.claude/skills/`.
 
 ### Cursor / Codex / Gemini CLI
 
-用这个仓库打开项目即可：它们会自动读 `AGENTS.md`（Cursor 还会读 `.cursor/rules/`，Gemini CLI 读 `GEMINI.md`）。在对话里说出发地、目的地和日期，agent 会把结果存到 `trips/<行程名>.json` 和 `.html`。
+Open the repo: these agents read `AGENTS.md` automatically. Cursor also reads `.cursor/rules/`, and Gemini CLI reads `GEMINI.md`. Results go to `trips/<trip>.json` and `.html`. The agent needs web access to get live prices.
 
-这些 agent 需要能上网（网页搜索或浏览器工具），否则查不到实时价格。
+### ChatGPT / Gemini (web)
 
-### ChatGPT / Gemini（网页版）
-
-1. 把 `europe-route-finder/SKILL.md`、`profile.md`、`schema/trip.schema.json`、`examples/leipzig-vienna.json` 上传到对话（或放进 GPT / Gem 的知识库，把 SKILL.md 的内容作为说明）。
-2. 打开联网搜索。
-3. 让它查完后按 schema 输出 JSON。
-4. 有代码解释器时，再上传 `scripts/render.py` 和 `template/` 里的三个文件，让它运行 `python3 render.py trip.json` 生成 HTML 给你下载；没有的话把 JSON 存下来，在本地渲染：
+1. Upload `SKILL.md`, `profile.md`, `schema/trip.schema.json` and `examples/leipzig-vienna.json`, or add them to a GPT or Gem as knowledge.
+2. Turn on web search and ask it to output JSON that follows the schema.
+3. With a code interpreter, also upload `scripts/render.py` and the three `template/` files, then run `python3 render.py trip.json`. Without one, render locally:
 
 ```bash
 node europe-route-finder/scripts/render.mjs trip.json
-# 或
+# or
 python3 europe-route-finder/scripts/render.py trip.json
 ```
 
-## 页面模板
+## Notes
 
-页面的样式固定在 `template/` 里，agent 只输出数据：
+- Prices are a snapshot from when the search ran. Operator sites are authoritative.
+- The agent never books anything or fills in personal or payment details.
+- `trips/` is git-ignored because your trips may contain personal details.
 
-- 方案编号按 `routes` 的顺序自动生成 A、B、C…
-- 「日期 × 方案价格」表和「总览」表从 routes 自动生成，每列最低价自动标绿
-- 浅色/深色主题跟随系统，手机上表格可以左右滑动
-- 生成的 HTML 是单个文件，样式和脚本都内联，可以直接发给别人
+## Related skills
 
-想改样式时改 `template/style.css` 或 `template/render.js`，然后运行 `npm run example` 用示例数据检查一遍。
-
-## 注意
-
-- 价格是查询时的快照，以官网为准。
-- agent 不会替你下单，也不会填写任何个人或支付信息。
-- `trips/` 默认不提交到 git，里面可能有你的行程和个人信息。
+| Skill | What it answers |
+|---|---|
+| **europe-route-finder** | How do I get there cheaply? |
+| [europe-town-stay-finder](https://github.com/JialiNong/europe-town-stay-finder-skill) | Where do I stay in a small town and its villages within 1 hour by transit, and what outdoor sports and hikes are nearby? |
+| [europe-city-culture-planner](https://github.com/JialiNong/europe-city-culture-planner-skill) | What do I do with my days in a big city: art, markets, architecture, viewpoints, walking tours, concerts and stand-up? |
 
 ## License
 
