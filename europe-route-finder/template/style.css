@@ -80,3 +80,20 @@ footer{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:
 footer ul{margin:0;padding-left:1.2em}
 .tag.red i{background:var(--piste-red)}
 .render-error{background:var(--surface);border:1px solid var(--bad);color:var(--bad);border-radius:10px;padding:16px;font-family:var(--f-data);font-size:13px;white-space:pre-wrap}
+
+/* ---- v2: toolbar (language switch + print) ---- */
+h2.sec{margin-bottom:10px}
+.toolbar{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap}
+.toolbar .print-btn{font:inherit;font-size:13px;font-weight:600;color:var(--glacier);background:var(--glacier-soft);border:none;border-radius:999px;padding:8px 18px;cursor:pointer}
+.toolbar .print-btn:hover{filter:brightness(0.94)}
+.toolbar .print-btn:active{filter:brightness(0.88)}
+.lang-switch{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:2px;background:var(--surface)}
+.lang-switch button{font:inherit;font-size:13px;font-weight:600;border:none;background:transparent;color:var(--muted);border-radius:999px;padding:6px 14px;cursor:pointer}
+.lang-switch button[aria-pressed="true"]{background:var(--glacier-soft);color:var(--glacier)}
+.lang-switch button:focus-visible,.toolbar .print-btn:focus-visible{outline:2px solid var(--glacier);outline-offset:2px}
+@media print{
+  .toolbar{display:none !important}
+  body{background:#fff}
+  a{color:inherit}
+  section.route,.verdict{break-inside:avoid}
+}
